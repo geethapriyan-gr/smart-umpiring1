@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Color Palette - Global and Culturally Neutral
-  static const Color primaryColor = Color(0xFF1A73E8); // Professional Blue
-  static const Color secondaryColor = Color(0xFF34A853); // Success Green
-  static const Color accentColor = Color(0xFFEA4335); // Alert Red
-  static const Color warningColor = Color(0xFFF9AB00); // Warning Yellow
-  static const Color neutralColor = Color(0xFF5F6368); // Neutral Gray
+  // Color Palette — Brand-aligned dark glass theme
+  static const Color primaryColor    = Color(0xFF381DA8); // Brand purple
+  static const Color secondaryColor  = Color(0xFF1DE9B6); // Teal-green accent
+  static const Color accentColor     = Color(0xFFFF4560); // Alert red
+  static const Color warningColor    = Color(0xFFFFAB40); // Amber warning
+  static const Color neutralColor    = Color(0xFF8B9CB6); // Muted slate
 
-  // Surface Colors
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color surfaceVariantColor = Color(0xFFF8F9FA);
-  static const Color backgroundColor = Color(0xFFFAFAFA);
+  // Surface Colors (light mode)
+  static const Color surfaceColor        = Color(0xFFF7F8FC);
+  static const Color surfaceVariantColor = Color(0xFFEEF0F8);
+  static const Color backgroundColor    = Color(0xFFF0F2FA);
 
   // Text Colors
-  static const Color textPrimaryColor = Color(0xFF202124);
-  static const Color textSecondaryColor = Color(0xFF5F6368);
-  static const Color textDisabledColor = Color(0xFF9AA0A6);
+  static const Color textPrimaryColor   = Color(0xFF1A1A2E);
+  static const Color textSecondaryColor = Color(0xFF5A6480);
+  static const Color textDisabledColor  = Color(0xFFA0AABF);
 
-  // Dark Theme Colors
-  static const Color darkPrimaryColor = Color(0xFF8AB4F8);
-  static const Color darkSurfaceColor = Color(0xFF1F1F1F);
-  static const Color darkBackgroundColor = Color(0xFF121212);
-  static const Color darkTextPrimaryColor = Color(0xFFFFFFFF);
-  static const Color darkTextSecondaryColor = Color(0xFFB0B0B0);
+  // Dark Theme Colors — deep space palette
+  static const Color darkPrimaryColor     = Color(0xFF8B6FFF);
+  static const Color darkSurfaceColor     = Color(0xFF0D1230);
+  static const Color darkBackgroundColor  = Color(0xFF060818);
+  static const Color darkTextPrimaryColor = Color(0xFFE8ECFF);
+  static const Color darkTextSecondaryColor = Color(0xFF8B9CB6);
 
   // Spacing System
   static const double spacingXS = 4.0;
@@ -326,11 +326,11 @@ class AppTheme {
         error: accentColor,
         surface: darkSurfaceColor,
         background: darkBackgroundColor,
-        onPrimary: Colors.black,
-        onSecondary: Colors.black,
+        onPrimary: Colors.white,
+        onSecondary: Color(0xFF060818),
         onSurface: darkTextPrimaryColor,
         onBackground: darkTextPrimaryColor,
-        onError: Colors.black,
+        onError: Colors.white,
       ),
 
       // Typography

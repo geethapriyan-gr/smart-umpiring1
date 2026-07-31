@@ -58,6 +58,71 @@ class ResponsiveUtils {
     return baseSize * scaleFactor.clamp(0.8, 1.5);
   }
 
+  /// Scale a size while keeping standard phones visually identical.
+  static double scale(
+    BuildContext context,
+    double baseSize, {
+    double minScale = 0.9,
+    double maxScale = 1.2,
+    double baseWidth = 390,
+  }) {
+    final mediaQuery = MediaQuery.of(context);
+    final shortestSide = mediaQuery.size.shortestSide;
+    final scaleFactor = (shortestSide / baseWidth).clamp(minScale, maxScale);
+    return baseSize * scaleFactor;
+  }
+
+  /// Get a centered content width that expands slightly on larger devices.
+  static double getAdaptiveContentWidth(
+    BuildContext context, {
+    double mobileFraction = 1.0,
+    double tabletFraction = 0.82,
+    double desktopFraction = 0.68,
+    double? maxWidth,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final width = responsiveValue(
+      context: context,
+      mobile: screenWidth * mobileFraction,
+      tablet: screenWidth * tabletFraction,
+      desktop: screenWidth * desktopFraction,
+    );
+
+    if (maxWidth == null) return width;
+    return width > maxWidth ? maxWidth : width;
+  }
+
+  /// Get responsive edge insets with proportional scaling.
+  static EdgeInsets getResponsiveInsets(
+    BuildContext context, {
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+  }) {
+    return EdgeInsets.fromLTRB(
+      scale(context, left),
+      scale(context, top),
+      scale(context, right),
+      scale(context, bottom),
+    );
+  }
+
+  /// Get a responsive square size for icons, loaders and compact artwork.
+  static double getResponsiveSquare(
+    BuildContext context,
+    double baseSize, {
+    double minScale = 0.88,
+    double maxScale = 1.18,
+  }) {
+    return scale(
+      context,
+      baseSize,
+      minScale: minScale,
+      maxScale: maxScale,
+    );
+  }
+
   /// Get responsive padding
   static EdgeInsets getResponsivePadding(BuildContext context, {
     double horizontal = 16.0,
@@ -314,5 +379,55 @@ extension ResponsiveExtension on BuildContext {
     this,
     width: width,
     height: height,
+  );
+
+  double scale(
+    double baseSize, {
+    double minScale = 0.9,
+    double maxScale = 1.2,
+    double baseWidth = 390,
+  }) => ResponsiveUtils.scale(
+    this,
+    baseSize,
+    minScale: minScale,
+    maxScale: maxScale,
+    baseWidth: baseWidth,
+  );
+
+  double adaptiveContentWidth({
+    double mobileFraction = 1.0,
+    double tabletFraction = 0.82,
+    double desktopFraction = 0.68,
+    double? maxWidth,
+  }) => ResponsiveUtils.getAdaptiveContentWidth(
+    this,
+    mobileFraction: mobileFraction,
+    tabletFraction: tabletFraction,
+    desktopFraction: desktopFraction,
+    maxWidth: maxWidth,
+  );
+
+  EdgeInsets responsiveInsets({
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+  }) => ResponsiveUtils.getResponsiveInsets(
+    this,
+    left: left,
+    top: top,
+    right: right,
+    bottom: bottom,
+  );
+
+  double responsiveSquare(
+    double baseSize, {
+    double minScale = 0.88,
+    double maxScale = 1.18,
+  }) => ResponsiveUtils.getResponsiveSquare(
+    this,
+    baseSize,
+    minScale: minScale,
+    maxScale: maxScale,
   );
 }

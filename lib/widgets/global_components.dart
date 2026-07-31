@@ -3,63 +3,175 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-/// Global Loading Indicator with Cricket Theme
-class CricketLoadingIndicator extends StatelessWidget {
+/// Global Loading Indicator – rotating logo with glass/glow aesthetic.
+class CricketLoadingIndicator extends StatefulWidget {
   final String? message;
   final double size;
+  final Color? ringColor;
 
   const CricketLoadingIndicator({
     Key? key,
     this.message,
-    this.size = 60.0,
+    this.size = 64.0,
+    this.ringColor,
   }) : super(key: key);
 
   @override
+  State<CricketLoadingIndicator> createState() =>
+      _CricketLoadingIndicatorState();
+}
+
+class _CricketLoadingIndicatorState extends State<CricketLoadingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rotateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotateController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _rotateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final double sz = widget.size;
+    final Color ring =
+        widget.ringColor ?? AppTheme.primaryColor;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryColor.withOpacity(0.3),
-                AppTheme.primaryColor.withOpacity(0.1),
-              ],
+        // ── Spinning logo inside frosted-glass disc ──────────────
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer glow halo
+            Container(
+              width: sz * 1.55,
+              height: sz * 1.55,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    ring.withOpacity(0.22),
+                    ring.withOpacity(0.06),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
+                ),
+              ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(
+                  begin: 0.90,
+                  end: 1.10,
+                  duration: 1400.ms,
+                  curve: Curves.easeInOut,
+                ),
+
+            // Spinning arc ring
+            SizedBox(
+              width: sz * 1.18,
+              height: sz * 1.18,
+              child: AnimatedBuilder(
+                animation: _rotateController,
+                builder: (_, __) => Transform.rotate(
+                  angle: _rotateController.value * 6.2832,
+                  child: CircularProgressIndicator(
+                    value: 0.75,
+                    strokeWidth: 2.8,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      ring.withOpacity(0.9),
+                    ),
+                    backgroundColor: ring.withOpacity(0.12),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-          ),
-          child: Icon(
-            Icons.sports_cricket,
-            color: AppTheme.primaryColor,
-            size: size * 0.6,
-          ),
-        ).animate()
-         .scale(delay: 200.ms, duration: 600.ms, curve: Curves.elasticOut)
-         .then()
-         .shimmer(delay: 800.ms, duration: 800.ms),
-        if (message != null) ...[
-          const SizedBox(height: AppTheme.spacingMD),
+
+            // Frosted-glass disc
+            Container(
+              width: sz,
+              height: sz,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.18),
+                    Colors.white.withOpacity(0.06),
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.20),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ring.withOpacity(0.25),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.all(sz * 0.18),
+              // Rotating logo
+              child: AnimatedBuilder(
+                animation: _rotateController,
+                builder: (_, child) => Transform.rotate(
+                  angle: _rotateController.value * 6.2832,
+                  child: child,
+                ),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // ── Optional message ─────────────────────────────────────
+        if (widget.message != null) ...[
+          const SizedBox(height: 18),
           Text(
-            message!,
+            widget.message!,
+            textAlign: TextAlign.center,
             style: GoogleFonts.montserrat(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onBackground,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.85),
+              letterSpacing: 0.3,
             ),
-          ).animate()
-           .fadeIn(duration: 400.ms, delay: 400.ms),
+          )
+              .animate()
+              .fadeIn(duration: 450.ms, delay: 200.ms)
+              .slideY(begin: 0.15, end: 0.0, duration: 450.ms, delay: 200.ms),
         ],
-        const SizedBox(height: AppTheme.spacingMD),
-        const CircularProgressIndicator().animate()
-         .fadeIn(duration: 400.ms, delay: 600.ms)
-         .scaleXY(begin: 0.5, end: 1.0, duration: 400.ms, delay: 600.ms),
       ],
-    );
+    ).animate().fadeIn(duration: 500.ms).scaleXY(
+          begin: 0.85,
+          end: 1.0,
+          duration: 500.ms,
+          curve: Curves.easeOutBack,
+        );
   }
 }
+
+
 
 /// Global Error Display with Retry Option
 class CricketErrorDisplay extends StatelessWidget {

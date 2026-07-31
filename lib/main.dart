@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:media_kit/media_kit.dart';
-import 'providers/video_provider.dart';
 import 'screens/home_screen.dart';
-import 'theme/app_theme.dart';
-import 'widgets/match_setup_dialog.dart';
+import 'shared/app/smart_umpire_app.dart';
+import 'widgets/global_components.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize media_kit for smooth video playback
   MediaKit.ensureInitialized();
 
@@ -33,38 +30,7 @@ void main() {
     ),
   );
 
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => VideoProvider())],
-      child: MaterialApp(
-        title: 'Smart Cricket Umpiring',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en', ''), // English
-          Locale('es', ''), // Spanish
-          Locale('hi', ''), // Hindi
-          Locale('ar', ''), // Arabic
-          Locale('zh', ''), // Chinese
-        ],
-        home: const AppStartupWrapper(),
-      ),
-    );
-  }
+  runApp(const SmartUmpireApp());
 }
 
 class AppStartupWrapper extends StatefulWidget {
@@ -80,6 +46,8 @@ class _AppStartupWrapperState extends State<AppStartupWrapper>
   late Animation<double> _logoAnimation;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  bool _hasStartedAnimation = false;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -109,38 +77,53 @@ class _AppStartupWrapperState extends State<AppStartupWrapper>
       ),
     );
 
-    _startAnimation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAnimation();
+    });
   }
 
-  void _startAnimation() async {
+  Future<void> _startAnimation() async {
+    if (_hasStartedAnimation) return;
+    _hasStartedAnimation = true;
+
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+
     await _logoController.forward();
+    if (!mounted) return;
+
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
     await _fadeController.forward();
+    if (!mounted) return;
+
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted || _hasNavigated) return;
+    _hasNavigated = true;
 
     // Navigate to home screen after animation
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
 
-            var tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            var offsetAnimation = animation.drive(tween);
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
 
-            return SlideTransition(
-              position: offsetAnimation,
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      );
-    }
+          return SlideTransition(
+            position: offsetAnimation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 800),
+      ),
+    );
   }
 
   @override
@@ -176,28 +159,25 @@ class _AppStartupWrapperState extends State<AppStartupWrapper>
                   return Transform.scale(
                     scale: _logoAnimation.value,
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 140,
+                      height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.9),
-                            Colors.white.withOpacity(0.7),
-                          ],
-                        ),
+                        color: Colors.white.withOpacity(0.12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
+                            color: Colors.white.withOpacity(0.25),
+                            blurRadius: 30,
+                            spreadRadius: 8,
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.sports_cricket,
-                        size: 60,
-                        color: Theme.of(context).primaryColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   );
@@ -246,8 +226,10 @@ class _AppStartupWrapperState extends State<AppStartupWrapper>
                 builder: (context, child) {
                   return Opacity(
                     opacity: _fadeAnimation.value,
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    child: const CricketLoadingIndicator(
+                      message: 'Setting up your match...',
+                      size: 68,
+                      ringColor: Colors.white,
                     ),
                   );
                 },

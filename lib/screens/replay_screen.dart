@@ -248,9 +248,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
           Expanded(
             child: AnimationLimiter(
               child: ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * 0.04,
-                  vertical: AppTheme.spacingSM,
+                padding: EdgeInsets.only(
+                  left: MediaQuery.of(context).size.width * 0.04,
+                  right: MediaQuery.of(context).size.width * 0.04,
+                  top: AppTheme.spacingSM,
+                  bottom: 140.0,
                 ),
                 itemCount: folders.length,
                 itemBuilder: (context, index) {
@@ -478,9 +480,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: AnimationLimiter(
         child: ListView.builder(
-          padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.04,
-            vertical: AppTheme.spacingSM,
+          padding: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+            right: MediaQuery.of(context).size.width * 0.04,
+            top: AppTheme.spacingSM,
+            bottom: 140.0,
           ),
           itemCount: sortedBalls.length,
           itemBuilder: (context, index) {
@@ -887,36 +891,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
                             ],
                           ),
                           const SizedBox(height: AppTheme.spacingXS),
-                          Wrap(
-                            spacing: AppTheme.spacingMD,
-                            runSpacing: AppTheme.spacingXS,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.access_time,
-                                    size: 12,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.6),
-                                  ),
-                                  const SizedBox(width: AppTheme.spacingXS),
-                                  Text(
-                                    '${clip.duration}s',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.6),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     Icons.calendar_today,
@@ -927,20 +905,24 @@ class _ReplayScreenState extends State<ReplayScreen> {
                                         .withOpacity(0.6),
                                   ),
                                   const SizedBox(width: AppTheme.spacingXS),
-                                  Text(
-                                    _formatTimestamp(clip.timestamp),
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.6),
+                                  Expanded(
+                                    child: Text(
+                                      _formatTimestamp(clip.timestamp),
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: AppTheme.spacingXS),
                               Row(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     Icons.videocam,
@@ -951,16 +933,20 @@ class _ReplayScreenState extends State<ReplayScreen> {
                                         .withOpacity(0.6),
                                   ),
                                   const SizedBox(width: AppTheme.spacingXS),
-                                  Text(
-                                    clip.camera2Path != null
-                                        ? 'Camera ${clip.cameraIndex} & Camera 2'
-                                        : 'Camera ${clip.cameraIndex}',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.6),
+                                  Expanded(
+                                    child: Text(
+                                      clip.camera2Path != null
+                                          ? 'Camera ${clip.cameraIndex} & Camera 2'
+                                          : 'Camera ${clip.cameraIndex}',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -995,6 +981,97 @@ class _ReplayScreenState extends State<ReplayScreen> {
         builder: (context) => BallReviewScreen(clip: clip),
       ),
     );
+  }
+
+  Future<void> _saveClipFromReplay(VideoClip clip, VideoProvider provider) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 18, 
+              height: 18, 
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+            ),
+            const SizedBox(width: AppTheme.spacingMD),
+            Expanded(
+              child: Text(
+                'Saving replay...',
+                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+        behavior: SnackBarBehavior.floating,
+        elevation: 8,
+        margin: const EdgeInsets.all(AppTheme.spacingMD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLG),
+          side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.3)),
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    final success = await provider.saveClip(clip);
+    if (!mounted) return;
+
+    if (success) {
+      final folder = provider.matchDetails?.folderName ?? provider.selectedMatchFolder;
+      if (folder != null) {
+        await provider.selectMatchFolder(folder);
+      }
+
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: AppTheme.spacingMD),
+              Expanded(
+                child: Text(
+                  'Replay saved successfully!',
+                  style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          elevation: 8,
+          margin: const EdgeInsets.all(AppTheme.spacingMD),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: AppTheme.spacingMD),
+              Expanded(
+                child: Text(
+                  'Failed to save replay.',
+                  style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          elevation: 8,
+          margin: const EdgeInsets.all(AppTheme.spacingMD),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   /// Shows a confirmation dialog then deletes [folderName] via the provider.

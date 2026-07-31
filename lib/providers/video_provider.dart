@@ -138,8 +138,11 @@ class VideoProvider with ChangeNotifier {
     }
 
     if (details.hasDualCameras) {
-      futures.add(_startPreviewPlayer(2, details.camera2Ip,
-          details.camera2Username, details.camera2Password,
+      futures.add(_startPreviewPlayer(
+          2,
+          details.camera2Ip,
+          details.camera2Username,
+          details.camera2Password,
           details.camera2Port));
     }
 
@@ -196,11 +199,11 @@ class VideoProvider with ChangeNotifier {
     //  rtsp-transport=tcp      → Mirrors the FFmpeg TCP flag; avoids UDP reorder.
     try {
       final mpv = player.platform as dynamic;
-      await mpv.setProperty('aid', 'no');                    // no audio
+      await mpv.setProperty('aid', 'no'); // no audio
       await mpv.setProperty('cache', 'no');
       await mpv.setProperty('cache-pause', 'no');
       await mpv.setProperty('demuxer-readahead-secs', '0');
-      await mpv.setProperty('demuxer-max-bytes', '131072');  // 128 KB
+      await mpv.setProperty('demuxer-max-bytes', '131072'); // 128 KB
       await mpv.setProperty('demuxer-max-back-bytes', '0');
       await mpv.setProperty('framedrop', 'vo');
       await mpv.setProperty('video-latency-hacks', 'yes');
@@ -217,12 +220,12 @@ class VideoProvider with ChangeNotifier {
         Media(rtspUrl),
         play: true,
       );
-      print('[Preview Cam$cameraIndex] Started (ultra-low-latency, no audio): $rtspUrl');
+      print(
+          '[Preview Cam$cameraIndex] Started (ultra-low-latency, no audio): $rtspUrl');
     } catch (e) {
       print('[Preview Cam$cameraIndex] Error: $e');
     }
   }
-
 
   Future<void> disposePreviewPlayers() async {
     for (final entry in _previewPlayers.entries) {
@@ -257,10 +260,10 @@ class VideoProvider with ChangeNotifier {
     try {
       _isDualCameraMode = _matchDetails!.hasDualCameras;
       _isReballRecording = isReball;
-      
+
       final matchFolder = _matchDetails!.folderName;
       _localVideoService.setMatchFolder(matchFolder);
-      
+
       // For reball, use the LAST recorded ball (ballCount - 1) because
       // _ballCount was already incremented after the previous normal recording.
       // For normal recording, use _ballCount as-is.
@@ -340,7 +343,8 @@ class VideoProvider with ChangeNotifier {
         } else {
           // For reball: track reball count for the PREVIOUS ball, DON'T increment ball number
           final reballBallKey = _getBallName(_ballCount - 1);
-          _reballCountsPerBall[reballBallKey] = (_reballCountsPerBall[reballBallKey] ?? 0) + 1;
+          _reballCountsPerBall[reballBallKey] =
+              (_reballCountsPerBall[reballBallKey] ?? 0) + 1;
           _currentReballIndex = _reballCountsPerBall[reballBallKey] ?? 1;
         }
         _bufferedClips.insertAll(0, newClips);
@@ -379,10 +383,10 @@ class VideoProvider with ChangeNotifier {
     // Take only maxBalls unique balls (with all their rebals)
     final uniqueBalls = clipsByBall.keys.toList();
     final result = <VideoClip>[];
-    
+
     // Sort balls in reverse order (newest first)
     uniqueBalls.sort((a, b) => b.compareTo(a));
-    
+
     for (int i = 0; i < uniqueBalls.length && i < maxBalls; i++) {
       final ballKey = uniqueBalls[i];
       result.addAll(clipsByBall[ballKey]!);
@@ -408,7 +412,7 @@ class VideoProvider with ChangeNotifier {
 
     try {
       _bufferedClips = await _localVideoService.getClips();
-      
+
       // Rebuild reball counts from loaded clips
       _reballCountsPerBall.clear();
       for (final clip in _bufferedClips) {
@@ -446,14 +450,31 @@ class VideoProvider with ChangeNotifier {
     }
   }
 
-  void saveMatchDetails(MatchDetails details) {
+  Future<bool> saveMatchDetails(MatchDetails details) async {
+    final previousMatchDetails = _matchDetails;
+    final previousBallCount = _ballCount;
+    final previousInnings = _currentInnings;
+    final previousReballCounts = Map<String, int>.from(_reballCountsPerBall);
+
+    _error = null;
     _matchDetails = details;
     _currentInnings = 1;
     _ballCount = 1;
     _reballCountsPerBall.clear();
     notifyListeners();
-    // Persist state immediately when a new match is created
-    _persistMatchState();
+
+    try {
+      await _persistMatchState();
+      return true;
+    } catch (e) {
+      _matchDetails = previousMatchDetails;
+      _ballCount = previousBallCount;
+      _currentInnings = previousInnings;
+      _reballCountsPerBall = previousReballCounts;
+      _error = 'Failed to save match details: $e';
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Moves to the next innings, resetting ball count.
@@ -491,17 +512,27 @@ class VideoProvider with ChangeNotifier {
     }
 
     await disposePreviewPlayers();
-    _matchDetails = null;
-    _isRecording = false;
-    _ballCount = 1;
-    _currentInnings = 1;
-    _bufferedClips = [];
-    _bufferStatus = null;
-    _reballCountsPerBall.clear();
-    _isReballRecording = false;
-    _currentReballIndex = 1;
-    _shouldAutoReball = false;
+    _resetActiveMatchState();
     _error = null;
+    notifyListeners();
+  }
+
+  Future<void> pauseMatch() async {
+    if (_matchDetails == null) return;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _persistMatchState();
+      await disposePreviewPlayers();
+      _resetActiveMatchState();
+    } catch (e) {
+      _error = 'Failed to pause match: $e';
+    }
+
+    _isLoading = false;
     notifyListeners();
   }
 
@@ -518,6 +549,20 @@ class VideoProvider with ChangeNotifier {
       currentInnings: _currentInnings,
       reballCountsPerBall: Map<String, int>.from(_reballCountsPerBall),
     );
+  }
+
+  void _resetActiveMatchState() {
+    _matchDetails = null;
+    _isRecording = false;
+    _isDualCameraMode = false;
+    _ballCount = 1;
+    _currentInnings = 1;
+    _bufferedClips = [];
+    _bufferStatus = null;
+    _reballCountsPerBall.clear();
+    _isReballRecording = false;
+    _currentReballIndex = 1;
+    _shouldAutoReball = false;
   }
 
   /// Checks if a match folder has a saved state that can be resumed.
@@ -543,7 +588,8 @@ class VideoProvider with ChangeNotifier {
       }
 
       // Restore match details
-      final matchDetailsJson = stateData['matchDetails'] as Map<String, dynamic>;
+      final matchDetailsJson =
+          stateData['matchDetails'] as Map<String, dynamic>;
       _matchDetails = MatchDetails.fromJson(matchDetailsJson);
 
       // Restore match progress
@@ -552,7 +598,8 @@ class VideoProvider with ChangeNotifier {
 
       // Restore reball counts
       _reballCountsPerBall.clear();
-      final savedReballCounts = stateData['reballCountsPerBall'] as Map<String, dynamic>?;
+      final savedReballCounts =
+          stateData['reballCountsPerBall'] as Map<String, dynamic>?;
       if (savedReballCounts != null) {
         savedReballCounts.forEach((key, value) {
           _reballCountsPerBall[key] = value as int;
@@ -630,19 +677,25 @@ class VideoProvider with ChangeNotifier {
   }
 
   // ── Save & Export Wrappers ────────────────────────────────────────────────
-  
+
   Future<bool> saveClip(VideoClip clip) async {
-    _isLoading = true;
-    notifyListeners();
+    // Optimistic UI update: instantly show as saved
+    final index = _bufferedClips.indexWhere((c) => c.id == clip.id);
+    if (index != -1) {
+      _bufferedClips[index] = clip.copyWith(isPermanent: true);
+      notifyListeners();
+    }
+
     try {
       final savedPath = await _localVideoService.saveBallReplay(clip);
-      _isLoading = false;
-      notifyListeners();
       return savedPath != null;
     } catch (e) {
       _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      // Rollback optimistic update on failure
+      if (index != -1) {
+        _bufferedClips[index] = clip.copyWith(isPermanent: false);
+        notifyListeners();
+      }
       return false;
     }
   }
@@ -694,4 +747,3 @@ class VideoProvider with ChangeNotifier {
     super.dispose();
   }
 }
-

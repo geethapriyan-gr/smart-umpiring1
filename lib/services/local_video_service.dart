@@ -546,7 +546,7 @@ class LocalVideoService {
     final file = File(ballPath);
 
     // Smart flush wait: exit as soon as the file stops growing (max 2 s)
-    if (ballPath != null) await _waitForFileFlush(ballPath);
+    await _waitForFileFlush(ballPath);
 
     if (await file.exists()) {
       final stats = await file.stat();
@@ -662,8 +662,8 @@ class LocalVideoService {
           ));
           print('[DualCam] Successfully created clip: ${path1.split('/').last}, size: ${(stats1.size / 1024).toStringAsFixed(1)}KB');
           if (camera2Path != null) {
-            final stats2 = await File(camera2Path!).stat();
-            print('[DualCam] Camera 2 clip: ${camera2Path!.split('/').last}, size: ${(stats2.size / 1024).toStringAsFixed(1)}KB');
+            final stats2 = await File(camera2Path).stat();
+            print('[DualCam] Camera 2 clip: ${camera2Path.split('/').last}, size: ${(stats2.size / 1024).toStringAsFixed(1)}KB');
           }
         }
       } else {

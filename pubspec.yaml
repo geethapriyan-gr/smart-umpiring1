@@ -55,8 +55,9 @@ flutter:
   uses-material-design: true
 
   # Assets
-  # assets:
-  #   - assets/images/
+  assets:
+    - assets/images/
+    - assets/SPLASH_SCREEN.mp4
 
   # Fonts - Using Google Fonts instead of local assets
   # fonts:

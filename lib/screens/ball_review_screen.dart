@@ -674,21 +674,32 @@ class _BallReviewScreenState extends State<BallReviewScreen> {
 
     setState(() => _isSaving = true);
     
-    // Show saving toast/snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            SizedBox(
-              width: 20, 
-              height: 20, 
+            const SizedBox(
+              width: 18, 
+              height: 18, 
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
             ),
-            SizedBox(width: 12),
-            Text('Saving replay to match folder...'),
+            const SizedBox(width: AppTheme.spacingMD),
+            Expanded(
+              child: Text(
+                'Saving replay...',
+                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.black87,
+        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+        behavior: SnackBarBehavior.floating,
+        elevation: 8,
+        margin: const EdgeInsets.all(AppTheme.spacingMD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLG),
+          side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.3)),
+        ),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -700,19 +711,47 @@ class _BallReviewScreenState extends State<BallReviewScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Saved successfully!'),
-            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: AppTheme.spacingMD),
+                Expanded(
+                  child: Text(
+                    'Replay saved successfully!',
+                    style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMD)),
+            elevation: 8,
+            margin: const EdgeInsets.all(AppTheme.spacingMD),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+            duration: const Duration(seconds: 3),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to save replay.'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: AppTheme.spacingMD),
+                Expanded(
+                  child: Text(
+                    'Failed to save replay.',
+                    style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMD)),
+            elevation: 8,
+            margin: const EdgeInsets.all(AppTheme.spacingMD),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -724,21 +763,32 @@ class _BallReviewScreenState extends State<BallReviewScreen> {
 
     setState(() => _isExporting = true);
     
-    // Show exporting toast
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            SizedBox(
-              width: 20, 
-              height: 20, 
+            const SizedBox(
+              width: 18, 
+              height: 18, 
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
             ),
-            SizedBox(width: 12),
-            Text('Exporting to Gallery (Movies/SmartUmpire)...'),
+            const SizedBox(width: AppTheme.spacingMD),
+            Expanded(
+              child: Text(
+                'Exporting to Gallery...',
+                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.black87,
+        backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+        behavior: SnackBarBehavior.floating,
+        elevation: 8,
+        margin: const EdgeInsets.all(AppTheme.spacingMD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLG),
+          side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.3)),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -750,19 +800,47 @@ class _BallReviewScreenState extends State<BallReviewScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Exported to Gallery successfully!'),
-            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: AppTheme.spacingMD),
+                Expanded(
+                  child: Text(
+                    'Exported to Gallery successfully!',
+                    style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMD)),
+            elevation: 8,
+            margin: const EdgeInsets.all(AppTheme.spacingMD),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+            duration: const Duration(seconds: 3),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to export. Check permissions.'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: AppTheme.spacingMD),
+                Expanded(
+                  child: Text(
+                    'Failed to export. Check permissions.',
+                    style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMD)),
+            elevation: 8,
+            margin: const EdgeInsets.all(AppTheme.spacingMD),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
+            duration: const Duration(seconds: 4),
           ),
         );
       }

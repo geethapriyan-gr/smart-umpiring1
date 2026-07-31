@@ -1,5 +1,7 @@
 /// Model class for storing camera configuration including IP, username, and password.
 class CameraConfig {
+  static const int defaultPort = 5554;
+
   /// The IP address of the camera (without protocol)
   final String ip;
 
@@ -17,14 +19,48 @@ class CameraConfig {
     required this.ip,
     required this.username,
     required this.password,
-    this.port = 5554,
+    this.port = defaultPort,
   });
 
   /// Constructs the RTSP URL with authentication credentials.
   ///
-  /// Format: rtsp://username:password@ip:port/
+  /// Accepts a plain host/IP or a value that already contains an RTSP path.
+  /// Username & password are percent-encoded so special characters do not
+  /// break preview or FFmpeg recording.
   String get rtspUrl {
-    return 'rtsp://$username:$password@$ip:$port/';
+    final rawInput = ip.trim();
+    if (rawInput.isEmpty) return '';
+
+    final normalizedInput = rawInput.replaceFirst(RegExp(r'^rtsp://'), '');
+    final firstSlashIndex = normalizedInput.indexOf('/');
+    final authority = firstSlashIndex >= 0
+        ? normalizedInput.substring(0, firstSlashIndex)
+        : normalizedInput;
+    final rawPath =
+        firstSlashIndex >= 0 ? normalizedInput.substring(firstSlashIndex) : '/';
+
+    final authorityWithoutCredentials =
+        authority.contains('@') ? authority.split('@').last : authority;
+
+    var host = authorityWithoutCredentials;
+    var resolvedPort = port;
+
+    final lastColonIndex = authorityWithoutCredentials.lastIndexOf(':');
+    if (lastColonIndex > 0 &&
+        authorityWithoutCredentials.indexOf(':') == lastColonIndex) {
+      final parsedPort = int.tryParse(
+          authorityWithoutCredentials.substring(lastColonIndex + 1));
+      if (parsedPort != null) {
+        host = authorityWithoutCredentials.substring(0, lastColonIndex);
+        resolvedPort = parsedPort;
+      }
+    }
+
+    final encodedUsername = Uri.encodeComponent(username);
+    final encodedPassword = Uri.encodeComponent(password);
+    final normalizedPath = rawPath.isEmpty ? '/' : rawPath;
+
+    return 'rtsp://$encodedUsername:$encodedPassword@$host:$resolvedPort$normalizedPath';
   }
 
   /// Creates a copy of this CameraConfig with updated values.
@@ -58,7 +94,7 @@ class CameraConfig {
       ip: map['ip'] ?? '',
       username: map['username'] ?? '',
       password: map['password'] ?? '',
-      port: map['port'] ?? 5554,
+      port: map['port'] ?? defaultPort,
     );
   }
 
@@ -68,7 +104,7 @@ class CameraConfig {
       ip: '',
       username: '',
       password: '',
-      port: 5554,
+      port: defaultPort,
     );
   }
 

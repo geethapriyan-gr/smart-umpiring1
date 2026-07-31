@@ -1,3 +1,5 @@
+import 'camera_config.dart';
+
 class MatchDetails {
   final String matchName;
   final String team1Name;
@@ -34,12 +36,22 @@ class MatchDetails {
 
   /// Constructs the RTSP URL from the camera 1 configuration.
   String get cameraRtspUrl {
-    return 'rtsp://$cameraUsername:$cameraPassword@$cameraIp:$cameraPort/';
+    return CameraConfig(
+      ip: cameraIp,
+      username: cameraUsername,
+      password: cameraPassword,
+      port: cameraPort,
+    ).rtspUrl;
   }
 
   /// Constructs the RTSP URL from the camera 2 configuration.
   String get camera2RtspUrl {
-    return 'rtsp://$camera2Username:$camera2Password@$camera2Ip:$camera2Port/';
+    return CameraConfig(
+      ip: camera2Ip,
+      username: camera2Username,
+      password: camera2Password,
+      port: camera2Port,
+    ).rtspUrl;
   }
 
   /// Checks if camera 1 configuration is valid.

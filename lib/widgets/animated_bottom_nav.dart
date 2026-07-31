@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive_utils.dart';
 
 class BottomNavItem {
   final IconData icon;
@@ -30,14 +31,27 @@ class AnimatedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalMargin = context.scale(16, minScale: 0.9, maxScale: 1.2);
+    final verticalMargin = context.scale(
+      AppTheme.spacingSM,
+      minScale: 0.9,
+      maxScale: 1.15,
+    );
+    final maxWidth = context.adaptiveContentWidth(
+      mobileFraction: 0.94,
+      tabletFraction: 0.72,
+      desktopFraction: 0.56,
+      maxWidth: 760,
+    );
+
     return SafeArea(
       child: Container(
         margin: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * 0.04, // Responsive horizontal margin
-          vertical: AppTheme.spacingSM,
+          horizontal: horizontalMargin,
+          vertical: verticalMargin,
         ),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.9, // Max width constraint
+          maxWidth: maxWidth,
         ),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
@@ -63,8 +77,8 @@ class AnimatedBottomNav extends StatelessWidget {
             ),
             child: Container(
               padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.02, // Responsive padding
-                vertical: AppTheme.spacingXS,
+                horizontal: context.scale(8, minScale: 0.9, maxScale: 1.12),
+                vertical: context.scale(4, minScale: 0.9, maxScale: 1.1),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -87,6 +101,23 @@ class AnimatedBottomNav extends StatelessWidget {
   Widget _buildNavItem(BuildContext context, int index) {
     final item = items[index];
     final isSelected = index == currentIndex;
+    final horizontalPadding = context.scale(
+      isSelected ? AppTheme.spacingMD : AppTheme.spacingSM,
+      minScale: 0.9,
+      maxScale: 1.12,
+    );
+    final verticalPadding = context.scale(
+      AppTheme.spacingSM,
+      minScale: 0.9,
+      maxScale: 1.1,
+    );
+    final minWidth = context.scale(60, minScale: 0.9, maxScale: 1.15);
+    final iconSize = context.scale(
+      isSelected ? 22 : 18,
+      minScale: 0.92,
+      maxScale: 1.12,
+    );
+    final labelFontSize = context.scale(10, minScale: 0.95, maxScale: 1.08);
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -95,11 +126,13 @@ class AnimatedBottomNav extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? AppTheme.spacingMD : AppTheme.spacingSM,
-          vertical: AppTheme.spacingSM,
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        constraints: const BoxConstraints(minWidth: 60), // Minimum width constraint
+        margin: EdgeInsets.symmetric(
+          horizontal: context.scale(2, minScale: 0.9, maxScale: 1.1),
+        ),
+        constraints: BoxConstraints(minWidth: minWidth),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
@@ -119,17 +152,17 @@ class AnimatedBottomNav extends StatelessWidget {
               color: isSelected
                   ? Colors.white
                   : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              size: isSelected ? 22 : 18,
+              size: iconSize,
             ).animate(target: isSelected ? 1 : 0)
              .scaleXY(end: 1.1, duration: 200.ms),
 
             if (isSelected) ...[
-              const SizedBox(height: 2),
+              SizedBox(height: context.scale(2, minScale: 0.9, maxScale: 1.08)),
               Text(
                 item.label,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: labelFontSize,
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
