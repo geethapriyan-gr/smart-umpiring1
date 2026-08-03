@@ -983,19 +983,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _buildOrbs(),
           Column(children: [
             Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.05, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                ),
-                child: _screens[_selectedIndex],
+              child: Stack(
+                children: List.generate(_screens.length, (index) {
+                  final isActive = _selectedIndex == index;
+                  // Use IgnorePointer and AnimatedOpacity so inactive screens don't block taps
+                  return IgnorePointer(
+                    ignoring: !isActive,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      opacity: isActive ? 1.0 : 0.0,
+                      child: AnimatedSlide(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        offset: isActive ? Offset.zero : const Offset(0.05, 0),
+                        child: _screens[index],
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
           ]),
